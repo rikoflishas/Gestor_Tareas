@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Tareas</title>
+    <link rel = "stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Gestor de Tareas</h1>
+        <h2 class="mb-4">Agrega tareas y muestraselas al mundo!</h2>
+        <div class="input-group mb-3">
+            <input type="number" id="characterId" placeholder="Nombre de Tarea" class="form-control" required>
+            <button class="btn btn-primary" onclick="getCharacter()">+</button>
+            <button class="btn btn-danger" onclick="refreshPage()">-</button>
+        </div>
+        <div id="characterCard" class="card" style="width: 18rem;display: none;">
+            <img src="" class="card-img-top" id="characterImage">
+            <div class="card-body">
+                <h5 class="card-title" id="characterName"></h5>
+                <p class="card-text" id="characterDetails"></p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
