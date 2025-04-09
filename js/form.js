@@ -4,10 +4,13 @@ let tasks = [];
 function addTask()
 {
     const taskInput = document.getElementById('taskId');
-    const taskText = taskInput.value.trim();
+    const taskText = taskInput.value.trim();// trim quita espacios al principio y al fin
+    // pero no los de en medio 
 
     //No añadiremos tareas vacias
     if(!taskText)   return;
+
+    console.log("Adding new task: ", taskText);
 
     //crearemos objetos de nuevas tareas con id unicos
     const newTask = {
@@ -16,18 +19,60 @@ function addTask()
         completed: false
     };
 
+    console.log("New task created with ID:", newTask.id);
+
     //añadir task al array
     tasks.push(newTask);
 
     //limpiar el campo de entrada
     taskInput.value = '';
+    console.log("Tasks array after adding:", JSON.stringify(tasks));
 
     //actualizar la lista de tareas
     renderTasks();
 }
 
-function deleteTask()
+async function getTask() {
+    const taskID = document.getElementById('taskId');
+
+    if(!taskID) return;
+
+    try {
+        //mensaje para ubicar al usuario en donde se encuentra en el proceso
+        console.log("Colectando las tareas...");
+
+        //hacemos el request del API usando AXIOS
+        const response = await axios.get(`http://localhost:3000/tareas`);
+
+        //manejando la respuesta
+        console.log("Data de tareas recibidas: ", response.data);
+
+        //añadir las tareas encontradas a la lista
+        const fetchedTask = {
+            id: response.data.id || Date.now().toString(),
+            text: response.data.title || response.data.text,
+            completed: response.data.completed || false
+        };
+
+        tasks.push(fetchedTask);
+
+        //limpiar el campo de entrada
+        document.getElementById('taskId').value = '';
+
+        //actualizar la lista
+        renderTasks();
+
+    } catch (error) {
+        //manejando los errores
+        console.error("Error al colectar la tarea: ", error);
+        alert("No pudimos recolectar la tarea. Intenta de nuevo.");
+    }
+}
+
+function deleteTask(taskId)
 {
+    console.log("Deleting task with ID:", taskId);
+    console.log("Tasks before:", tasks)
     //filtrar las tareas con un id
     tasks = tasks.filter(task => task.id !== taskId);
 
@@ -40,6 +85,8 @@ function editTask(taskId)
     const taskToEdit = tasks.find(task => task.id === taskId);
     if(!taskToEdit) return;
 
+    const newText = prompt('Edit task: ', taskToEdit.text);
+
     //actualiza la tarea si el user no cancelo pero escribio texto
     if (newText !== null && newText.trim() !== '') {
         taskToEdit.text = newText.trim();
@@ -50,9 +97,9 @@ function editTask(taskId)
 //mark task as done/undone
 function markTask()
 {
-    const task = tasks.find(find => task.id === taskId);
-    if(task){
-        task.completed = !task.completed;
+    const taskToMark = tasks.find(t => t.id === taskId);
+    if(taskToMark){
+        taskToMark.completed = !taskToMark.completed;
         renderTasks();
     }
 }
@@ -72,7 +119,8 @@ function renderTasks()
         //crear el elemento de html para el texto de la tarea
         const taskText = document.createElement('span');
         taskText.textContent = task.text;
-        if(task.completed){
+        if(task.completed)
+        {
             taskText.style.textDecoration = 'line-through';//tachar el texto
             taskText.style.color = '#888';//cambiar a color gris
         }
@@ -81,7 +129,7 @@ function renderTasks()
         const checkbox = document.createElement('input');
         checkbox.type = 'checkbox';
         checkbox.checked = task.completed;
-        checkbox.addEventListener('change', () => markTask(task.id));
+        checkbox.addEventListener( 'change', () => markTask(task.id) );
 
         // Crea contener para el texto de la tarea y el checkbox
         const taskTextContainer = document.createElement('div');
@@ -97,7 +145,7 @@ function renderTasks()
         //vamos a crear el boton para editar
         const editButton = document.createElement('button');
         editButton.textContent = 'Edit';
-        editButton.addEventListener('click', () => editTask(task.id));
+        editButton.addEventListener( 'click', () => editTask(task.id) );
 
         //crearemos el boton para eliminar
         const deleteButton = document.createElement('button');
