@@ -1,7 +1,15 @@
+//const express = require('express');
+//const cors = require('cors');
+//const app = express();
+
+// Enable CORS for all routes
+//app.use(cors());
+
 //guardamos las tareas en un array
 let tasks = [];
+const API_URL = 'http://localhost:3000/tareas/';
 
-function addTask()
+async function addTask()
 {
     const taskInput = document.getElementById('taskId');
     const taskText = taskInput.value.trim();// trim quita espacios al principio y al fin
@@ -10,26 +18,36 @@ function addTask()
     //No añadiremos tareas vacias
     if(!taskText)   return;
 
-    console.log("Adding new task: ", taskText);
+   try {
+        console.log("Adding new task: ", taskText);
 
-    //crearemos objetos de nuevas tareas con id unicos
-    const newTask = {
-        id: Date.now().toString(),  // este sera el id
-        text: taskText,
-        completed: false
-    };
+        //crearemos objetos de nuevas tareas con id unicos
+        const newTask = {
+            id: Date.now().toString(),  // este sera el id
+            text: taskText,
+            completed: false
+        };
 
-    console.log("New task created with ID:", newTask.id);
+        console.log("New task created with ID:", newTask.id);
 
-    //añadir task al array
-    tasks.push(newTask);
+        // Send POST request to the API
+        const response = await axios.post(API_URL, newTask);
 
-    //limpiar el campo de entrada
-    taskInput.value = '';
-    console.log("Tasks array after adding:", JSON.stringify(tasks));
+        const savedTask = response.data;
 
-    //actualizar la lista de tareas
-    renderTasks();
+        //añadir task al array
+        tasks.push(savedTask);
+
+        //limpiar el campo de entrada
+        taskInput.value = '';
+        console.log("Tasks array after adding: ", JSON.stringify(tasks));
+
+        //actualizar la lista de tareas
+        renderTasks();
+   } catch (error) {
+        console.error("Error al añadir la tarea: ", error);
+        alert("La tarea no pudo ser agregada. Intenta de nuevo.");
+   }
 }
 
 async function getTask() {
@@ -69,18 +87,28 @@ async function getTask() {
     }
 }
 
-function deleteTask(taskId)
+async function deleteTask(taskId)
 {
     console.log("Deleting task with ID:", taskId);
     console.log("Tasks before:", tasks)
-    //filtrar las tareas con un id
-    tasks = tasks.filter(task => task.id !== taskId);
 
-    //actualizar lista de tareas 
-    renderTasks();
+    try {
+        //Borrar de la API
+        await axios.delete(`http://localhost:3000/tareas/${taskId}`);
+        
+        //filtrar las tareas con un id. Removiendolas del array local
+        tasks = tasks.filter(task => task.id !== taskId);
+        
+        //actualizar lista de tareas 
+        renderTasks();
+    } catch (error) {
+
+        console.error("Ocurrió un error al intentar elmiinar una tarea: ", error);
+        alert("No se pudo eliminar la tarea. Intenta de nuevo.");
+    }
 }
 
-function editTask(taskId)
+async function editTask(taskId)
 {
     const taskToEdit = tasks.find(task => task.id === taskId);
     if(!taskToEdit) return;
@@ -89,8 +117,24 @@ function editTask(taskId)
 
     //actualiza la tarea si el user no cancelo pero escribio texto
     if (newText !== null && newText.trim() !== '') {
-        taskToEdit.text = newText.trim();
-        renderTasks();
+        try {
+            //actualizar API
+            const response = await axios.put(`http://localhost:3000/tareas/${taskId}`, {
+                ...taskToEdit,
+                text: newText.trim()
+            });
+
+            //hay que actualizar en array local de igual manera
+            taskToEdit.text = newText.trim();
+
+            //Actualiza UI
+            renderTasks();
+        } catch (error) {
+            console.error("error al actualizar tarea:", error);
+            alert("No se pudo actualizar tarea. Intenta de nuevo.");
+        }
+        
+        // taskToEdit.text = newText.trim();
     }
 }
 
@@ -103,6 +147,20 @@ function markTask()
         renderTasks();
     }
 }
+
+//
+// Function to load all tasks from the API
+async function loadTasks() {
+    try {
+        const response = await axios.get('http://localhost:3000/tareas');
+        tasks = response.data;
+        renderTasks();
+    } catch (error) {
+        console.error("Error loading tasks:", error);
+    }
+}
+
+
 
 function renderTasks()
 {
@@ -173,3 +231,5 @@ document.getElementById('taskId').addEventListener('keypress', function(event){
 //inicializa la lista de tareas
 renderTasks();
 
+// Call this when the page loads
+document.addEventListener('DOMContentLoaded', loadTasks);
