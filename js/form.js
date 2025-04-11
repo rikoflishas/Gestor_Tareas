@@ -7,7 +7,7 @@
 
 //guardamos las tareas en un array
 let tasks = [];
-const API_URL = 'http://localhost:3000/tareas/';
+//const API_URL = 'http://localhost:3000/tareas/';
 
 async function addTask()
 {
@@ -31,7 +31,7 @@ async function addTask()
         console.log("New task created with ID:", newTask.id);
 
         // Send POST request to the API
-        const response = await axios.post(API_URL, newTask);
+        const response = await axios.post('http://localhost:3000/tareas/', newTask);
 
         const savedTask = response.data;
 
